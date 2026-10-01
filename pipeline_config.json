@@ -1,0 +1,126 @@
+{
+  "catalog": "neobank",
+  "schemas": {
+    "bronze": "bronze",
+    "silver": "silver",
+    "gold": "gold"
+  },
+  "landing_path": "/Volumes/neobank/raw/landing",
+  "sources": [
+    {
+      "name": "customers",
+      "enabled": true,
+      "source_system": "core_banking",
+      "format": "csv",
+      "path": "customers.csv",
+      "primary_key": ["customer_id"],
+      "load_type": "full",
+      "columns": {
+        "customer_id": "string",
+        "first_name": "string",
+        "last_name": "string",
+        "email": "string",
+        "state": "string",
+        "signup_date": "date",
+        "segment": "string"
+      },
+      "required": ["customer_id", "email"],
+      "trim": ["first_name", "last_name", "email", "state"],
+      "lowercase": ["email"],
+      "uppercase": ["state"]
+    },
+    {
+      "name": "accounts",
+      "enabled": true,
+      "source_system": "core_banking",
+      "format": "csv",
+      "path": "accounts.csv",
+      "primary_key": ["account_id"],
+      "load_type": "full",
+      "columns": {
+        "account_id": "string",
+        "customer_id": "string",
+        "account_type": "string",
+        "open_date": "date",
+        "status": "string",
+        "balance": "decimal(18,2)"
+      },
+      "required": ["account_id", "customer_id"]
+    },
+    {
+      "name": "transactions",
+      "enabled": true,
+      "source_system": "payments",
+      "format": "csv",
+      "path": "transactions.csv",
+      "primary_key": ["txn_id"],
+      "load_type": "incremental",
+      "watermark_column": "txn_ts",
+      "columns": {
+        "txn_id": "string",
+        "account_id": "string",
+        "txn_ts": "timestamp",
+        "amount": "decimal(18,2)",
+        "txn_type": "string",
+        "channel": "string",
+        "merchant_category": "string",
+        "status": "string"
+      },
+      "required": ["txn_id", "account_id", "txn_ts", "amount"]
+    },
+    {
+      "name": "loans",
+      "enabled": true,
+      "source_system": "lending",
+      "format": "csv",
+      "path": "loans.csv",
+      "primary_key": ["loan_id"],
+      "load_type": "full",
+      "columns": {
+        "loan_id": "string",
+        "customer_id": "string",
+        "product": "string",
+        "principal": "decimal(18,2)",
+        "interest_rate": "decimal(5,2)",
+        "origination_date": "date",
+        "term_months": "int",
+        "outstanding_balance": "decimal(18,2)",
+        "days_past_due": "int"
+      },
+      "required": ["loan_id", "customer_id"]
+    },
+    {
+      "name": "credit_bureau",
+      "enabled": true,
+      "source_system": "credit_bureau",
+      "format": "csv",
+      "path": "credit_bureau.csv",
+      "primary_key": ["customer_id", "report_date"],
+      "load_type": "full",
+      "columns": {
+        "customer_id": "string",
+        "report_date": "date",
+        "credit_score": "int",
+        "total_debt": "decimal(18,2)",
+        "delinquencies_24m": "int"
+      },
+      "required": ["customer_id", "report_date", "credit_score"]
+    },
+    {
+      "name": "branches_sqlserver",
+      "enabled": false,
+      "source_system": "sql_server",
+      "format": "jdbc",
+      "jdbc": {
+        "url_secret": "neobank/sqlserver-jdbc-url",
+        "user_secret": "neobank/sqlserver-user",
+        "password_secret": "neobank/sqlserver-password",
+        "table": "dbo.branches"
+      },
+      "primary_key": ["branch_id"],
+      "load_type": "full",
+      "columns": {},
+      "required": ["branch_id"]
+    }
+  ]
+}
